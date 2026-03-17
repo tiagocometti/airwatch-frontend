@@ -1,0 +1,154 @@
+
+    <div class="register-page">
+      <div class="bg-orb orb-1"></div>
+      <div class="bg-orb orb-2"></div>
+
+      <div class="register-card fade-in">
+        <div class="card-header">
+          <div class="logo-mark">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+              <circle cx="12" cy="12" r="5" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+              <circle cx="12" cy="12" r="2" fill="#00d4ff"/>
+            </svg>
+          </div>
+          <h1 class="card-title">Criar Conta</h1>
+          <p class="card-subtitle">Cadastre-se para acessar o AirWatch</p>
+        </div>
+
+        @if (!success()) {
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form">
+            <div class="field-group">
+              <label class="field-label">Nome completo</label>
+              <div class="field-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input
+                  type="text"
+                  formControlName="name"
+                  class="field-input"
+                  placeholder="Seu nome"
+                  autocomplete="name"
+                />
+              </div>
+              @if (form.get('name')?.invalid && form.get('name')?.touched) {
+                <span class="field-error">Nome é obrigatório.</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">E-mail</label>
+              <div class="field-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input
+                  type="email"
+                  formControlName="email"
+                  class="field-input"
+                  placeholder="seu@email.com"
+                  autocomplete="email"
+                />
+              </div>
+              @if (form.get('email')?.invalid && form.get('email')?.touched) {
+                <span class="field-error">Informe um e-mail válido.</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Senha</label>
+              <div class="field-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  class="field-input"
+                  placeholder="Mínimo 6 caracteres"
+                  autocomplete="new-password"
+                />
+                <button type="button" class="toggle-pw" (click)="showPassword.set(!showPassword())">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    @if (showPassword()) {
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    } @else {
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    }
+                  </svg>
+                </button>
+              </div>
+              @if (form.get('password')?.invalid && form.get('password')?.touched) {
+                <span class="field-error">A senha deve ter pelo menos 6 caracteres.</span>
+              }
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Confirmar senha</label>
+              <div class="field-wrapper">
+                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  class="field-input"
+                  placeholder="Repita a senha"
+                  autocomplete="new-password"
+                />
+              </div>
+              @if (form.errors?.['passwordMismatch'] && form.get('confirmPassword')?.touched) {
+                <span class="field-error">As senhas não coincidem.</span>
+              }
+            </div>
+
+            @if (error()) {
+              <div class="error-msg fade-in">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {{ error() }}
+              </div>
+            }
+
+            <button type="submit" class="submit-btn" [disabled]="loading() || form.invalid">
+              @if (loading()) {
+                <span class="spinner"></span> Criando conta...
+              } @else {
+                Criar conta
+              }
+            </button>
+          </form>
+        } @else {
+          <div class="success-state fade-in">
+            <div class="success-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+            </div>
+            <h2 class="success-title">Conta criada!</h2>
+            <p class="success-text">Seu cadastro foi realizado com sucesso. Você já pode fazer login.</p>
+            <a routerLink="/login" class="submit-btn" style="text-decoration:none;text-align:center;display:block;margin-top:8px">
+              Ir para o login
+            </a>
+          </div>
+        }
+
+        @if (!success()) {
+          <p class="footer-link">
+            Já tem conta?
+            <a routerLink="/login" class="link">Fazer login</a>
+          </p>
+        }
+      </div>
+    </div>

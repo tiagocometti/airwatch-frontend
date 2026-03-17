@@ -1,0 +1,95 @@
+/* === AIRWATCH GLOBAL DESIGN SYSTEM === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep: #06090f;
+  --bg-surface: #0c1220;
+  --bg-card: #0d1424;
+  --bg-card-hover: #131c30;
+  --border: rgba(0, 212, 255, 0.1);
+  --border-active: rgba(0, 212, 255, 0.35);
+  --accent: #00d4ff;
+  --accent-glow: rgba(0, 212, 255, 0.2);
+  --accent-dim: rgba(0, 212, 255, 0.5);
+  --success: #00e676;
+  --success-glow: rgba(0, 230, 118, 0.2);
+  --warning: #ff9800;
+  --warning-glow: rgba(255, 152, 0, 0.2);
+  --danger: #ff5252;
+  --danger-glow: rgba(255, 82, 82, 0.2);
+  --text-primary: #e2eef5;
+  --text-secondary: #6a8fa8;
+  --text-muted: #334d61;
+  --font-ui: 'Exo 2', sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+  --sidebar-w: 240px;
+  --sidebar-w-collapsed: 68px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-ui);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Grid background */
+body {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.4); }
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--accent-glow); }
+  50% { box-shadow: 0 0 24px var(--accent-glow), 0 0 40px var(--accent-glow); }
+}
+
+.fade-in { animation: fade-in 0.4s ease both; }
+.slide-in { animation: slide-in-left 0.3s ease both; }
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* Utility classes */
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+.text-secondary { color: var(--text-secondary); }
+.font-mono { font-family: var(--font-data); }

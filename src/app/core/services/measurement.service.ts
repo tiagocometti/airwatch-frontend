@@ -1,0 +1,26 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Measurement } from '../models/measurement.model';
+import { PagedResult } from '../models/sensor.model';
+
+const API = 'http://localhost:5119/api';
+
+@Injectable({ providedIn: 'root' })
+export class MeasurementService {
+  constructor(private http: HttpClient) {}
+
+  getLatest(page = 1, pageSize = 20) {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResult<Measurement>>(`${API}/measurements/latest`, { params });
+  }
+
+  getBySensor(sensorId: string, page = 1, pageSize = 50) {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResult<Measurement>>(`${API}/measurements/sensor/${sensorId}`, { params });
+  }
+
+  getByPeriod(from: string, to: string, page = 1, pageSize = 100) {
+    const params = new HttpParams().set('from', from).set('to', to).set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResult<Measurement>>(`${API}/measurements/period`, { params });
+  }
+}
