@@ -1,8 +1,8 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { SensorService } from '../../core/services/sensor.service';
-import { Sensor } from '../../core/models/sensor.model';
+import { DeviceService } from '../../core/services/device.service';
+import { Device } from '../../core/models/device.model';
 
 @Component({
   selector: 'app-sensors',
@@ -11,7 +11,7 @@ import { Sensor } from '../../core/models/sensor.model';
   styleUrl: './sensors.component.css'
 })
 export class SensorsComponent implements OnInit {
-  sensors = signal<Sensor[]>([]);
+  devices = signal<Device[]>([]);
   loading = signal(true);
   showModal = signal(false);
   saving = signal(false);
@@ -19,7 +19,7 @@ export class SensorsComponent implements OnInit {
   success = signal(false);
   form: FormGroup;
 
-  constructor(private sensorSvc: SensorService, private fb: FormBuilder) {
+  constructor(private deviceSvc: DeviceService, private fb: FormBuilder) {
     this.form = this.fb.group({
       externalId: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
       name: ['', Validators.required],
@@ -31,8 +31,8 @@ export class SensorsComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.sensorSvc.getAll().subscribe({
-      next: s => { this.sensors.set(s); this.loading.set(false); },
+    this.deviceSvc.getAll().subscribe({
+      next: d => { this.devices.set(d); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
   }
@@ -41,7 +41,7 @@ export class SensorsComponent implements OnInit {
     if (this.form.invalid) return;
     this.saving.set(true);
     this.error.set('');
-    this.sensorSvc.register(this.form.value).subscribe({
+    this.deviceSvc.register(this.form.value).subscribe({
       next: () => {
         this.success.set(true);
         this.saving.set(false);
@@ -49,7 +49,7 @@ export class SensorsComponent implements OnInit {
         setTimeout(() => { this.closeModal(); }, 1500);
       },
       error: e => {
-        this.error.set(e.status === 409 ? 'Ja existe um sensor com este ID externo.' : 'Erro ao cadastrar sensor.');
+        this.error.set(e.status === 409 ? 'Ja existe um dispositivo com este ID externo.' : 'Erro ao cadastrar dispositivo.');
         this.saving.set(false);
       }
     });

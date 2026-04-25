@@ -1,12 +1,13 @@
-export interface Sensor {
-  id?: string;
+export interface Device {
+  id: string;
   externalId: string;
   name: string;
   location: string;
   isActive: boolean;
+  registeredAt: string;
 }
 
-export interface RegisterSensorRequest {
+export interface CreateDevice {
   externalId: string;
   name: string;
   location: string;

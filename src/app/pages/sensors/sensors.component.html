@@ -2,14 +2,14 @@
     <div class="sensors-page">
       <header class="page-header">
         <div>
-          <h1 class="page-title">Sensores</h1>
-          <p class="page-subtitle">Gerencie os dispositivos cadastrados no sistema</p>
+          <h1 class="page-title">Dispositivos</h1>
+          <p class="page-subtitle">Gerencie os Arduinos cadastrados no sistema</p>
         </div>
         <button class="add-btn" (click)="showModal.set(true)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Novo Sensor
+          Novo Dispositivo
         </button>
       </header>
 
@@ -23,13 +23,13 @@
             </div>
           }
         </div>
-      } @else if (sensors().length === 0) {
+      } @else if (devices().length === 0) {
         <div class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
           </svg>
-          <p>Nenhum sensor cadastrado ainda.</p>
-          <button class="add-btn" (click)="showModal.set(true)">Cadastrar primeiro sensor</button>
+          <p>Nenhum dispositivo cadastrado ainda.</p>
+          <button class="add-btn" (click)="showModal.set(true)">Cadastrar primeiro dispositivo</button>
         </div>
       } @else {
         <div class="table-card fade-in">
@@ -39,19 +39,19 @@
             <span>Localizacao</span>
             <span>Status</span>
           </div>
-          @for (sensor of sensors(); track sensor.externalId) {
+          @for (device of devices(); track device.externalId) {
             <div class="table-row">
-              <span class="mono accent-text">{{ sensor.externalId }}</span>
-              <span class="sensor-name">{{ sensor.name }}</span>
+              <span class="mono accent-text">{{ device.externalId }}</span>
+              <span class="sensor-name">{{ device.name }}</span>
               <span class="location">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
                 </svg>
-                {{ sensor.location }}
+                {{ device.location }}
               </span>
-              <span class="status-pill" [class.active]="sensor.isActive">
+              <span class="status-pill" [class.active]="device.isActive">
                 <span class="dot"></span>
-                {{ sensor.isActive ? 'Ativo' : 'Inativo' }}
+                {{ device.isActive ? 'Ativo' : 'Inativo' }}
               </span>
             </div>
           }
@@ -63,7 +63,7 @@
         <div class="modal-overlay" (click)="closeModal()">
           <div class="modal-card fade-in" (click)="$event.stopPropagation()">
             <div class="modal-header">
-              <h2>Cadastrar Sensor</h2>
+              <h2>Cadastrar Dispositivo</h2>
               <button class="close-btn" (click)="closeModal()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -74,23 +74,23 @@
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-form">
               <div class="field-group">
                 <label class="field-label">ID Externo</label>
-                <input formControlName="externalId" class="field-input" placeholder="ex: lab-sensor-01">
-                <span class="field-hint">Deve coincidir com o ID configurado no firmware do sensor.</span>
+                <input formControlName="externalId" class="field-input" placeholder="ex: arduino-01">
+                <span class="field-hint">Deve coincidir com o deviceId configurado no firmware do Arduino.</span>
               </div>
               <div class="field-group">
                 <label class="field-label">Nome</label>
-                <input formControlName="name" class="field-input" placeholder="ex: Sensor do Laboratorio">
+                <input formControlName="name" class="field-input" placeholder="ex: Arduino 01">
               </div>
               <div class="field-group">
                 <label class="field-label">Localizacao</label>
-                <input formControlName="location" class="field-input" placeholder="ex: Bloco B - Sala 204">
+                <input formControlName="location" class="field-input" placeholder="ex: Lab 1">
               </div>
 
               @if (error()) {
                 <div class="error-msg fade-in">{{ error() }}</div>
               }
               @if (success()) {
-                <div class="success-msg fade-in">Sensor cadastrado com sucesso!</div>
+                <div class="success-msg fade-in">Dispositivo cadastrado com sucesso!</div>
               }
 
               <div class="modal-actions">

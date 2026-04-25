@@ -29,8 +29,8 @@
             </svg>
           </div>
           <div>
-            <div class="summary-value mono">{{ activeSensors() }}</div>
-            <div class="summary-label">Sensores ativos</div>
+            <div class="summary-value mono">{{ activeDevices() }}</div>
+            <div class="summary-label">Dispositivos ativos</div>
           </div>
         </div>
         <div class="summary-card">
@@ -41,40 +41,29 @@
           </div>
           <div>
             <div class="summary-value mono">{{ totalMeasurements() }}</div>
-            <div class="summary-label">Medicoes hoje</div>
+            <div class="summary-label">Medicoes carregadas</div>
           </div>
         </div>
         <div class="summary-card">
-          <div class="summary-icon" [class]="avgGasLevel()">
+          <div class="summary-icon" [class]="avgPpmLevel()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2a10 10 0 0 0-7.07 17.07M12 2a10 10 0 0 1 7.07 17.07"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
           </div>
           <div>
-            <div class="summary-value mono">{{ avgGas() }}</div>
-            <div class="summary-label">Gas medio (ppm)</div>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-icon warning">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
-            </svg>
-          </div>
-          <div>
-            <div class="summary-value mono">{{ avgTemp() }}°C</div>
-            <div class="summary-label">Temperatura media</div>
+            <div class="summary-value mono">{{ avgPpm() }}</div>
+            <div class="summary-label">PPM medio</div>
           </div>
         </div>
       </div>
 
-      <!-- Sensor cards -->
+      <!-- Sensor cards (3 por device) -->
       <section class="section">
         <h2 class="section-title">Leituras por Sensor</h2>
-        @if (loading() && sensorCards().length === 0) {
+        @if (loading() && deviceCards().length === 0) {
           <div class="cards-grid">
-            @for (i of [1,2,3]; track i) {
+            @for (i of [1,2,3,4,5,6]; track i) {
               <div class="sensor-card skeleton-card">
                 <div class="skeleton" style="height:20px;width:60%;margin-bottom:8px"></div>
                 <div class="skeleton" style="height:48px;width:40%;margin-bottom:16px"></div>
@@ -82,44 +71,47 @@
               </div>
             }
           </div>
-        } @else if (sensorCards().length === 0) {
+        } @else if (deviceCards().length === 0) {
           <div class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
               <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/>
             </svg>
-            <p>Nenhum sensor cadastrado ainda.</p>
-            <a href="/sensors" class="link-btn">Cadastrar sensor</a>
+            <p>Nenhum dispositivo cadastrado ainda.</p>
+            <a href="/devices" class="link-btn">Cadastrar dispositivo</a>
           </div>
         } @else {
           <div class="cards-grid">
-            @for (card of sensorCards(); track card.sensor.externalId) {
-              <div class="sensor-card fade-in" [class]="'card-' + card.level" (click)="selectSensor(card.sensor.externalId)">
+            @for (card of deviceCards(); track card.device.externalId + card.sensorType) {
+              <div class="sensor-card fade-in" [class]="'card-' + card.level" (click)="selectDevice(card.device.externalId)">
                 <div class="card-top">
-                  <div class="sensor-id">{{ card.sensor.externalId }}</div>
-                  <div class="sensor-status" [class.online]="card.sensor.isActive">
+                  <div class="sensor-id">{{ card.device.externalId }}</div>
+                  <div class="sensor-status" [class.online]="card.device.isActive">
                     <span class="dot"></span>
-                    {{ card.sensor.isActive ? 'Online' : 'Offline' }}
+                    {{ card.device.isActive ? 'Online' : 'Offline' }}
                   </div>
                 </div>
-                <div class="sensor-name">{{ card.sensor.name }}</div>
+                <div class="sensor-name">{{ card.label }}</div>
                 @if (card.latest) {
+                  @if (!card.latest.calibrated) {
+                    <div class="calib-badge">Nao calibrado</div>
+                  }
                   <div class="metrics-row">
                     <div class="metric">
-                      <span class="metric-value mono" [class]="'text-' + card.level">{{ card.latest.gasValue }}</span>
+                      <span class="metric-value mono" [class]="'text-' + card.level">{{ card.latest.ppm | number:'1.1-1' }}</span>
                       <span class="metric-unit">ppm</span>
-                      <span class="metric-label">Gas</span>
+                      <span class="metric-label">PPM</span>
                     </div>
                     <div class="metric-divider"></div>
                     <div class="metric">
-                      <span class="metric-value mono">{{ card.latest.temperature }}</span>
-                      <span class="metric-unit">C</span>
-                      <span class="metric-label">Temp.</span>
+                      <span class="metric-value mono">{{ card.latest.voltageV | number:'1.2-2' }}</span>
+                      <span class="metric-unit">V</span>
+                      <span class="metric-label">Tensao</span>
                     </div>
                     <div class="metric-divider"></div>
                     <div class="metric">
-                      <span class="metric-value mono">{{ card.latest.humidity }}</span>
-                      <span class="metric-unit">%</span>
-                      <span class="metric-label">Umid.</span>
+                      <span class="metric-value mono">{{ card.latest.adcRaw }}</span>
+                      <span class="metric-unit">ADC</span>
+                      <span class="metric-label">Raw</span>
                     </div>
                   </div>
                   <div class="card-timestamp">
@@ -138,11 +130,11 @@
       </section>
 
       <!-- Chart section -->
-      @if (selectedSensor()) {
+      @if (selectedDevice()) {
         <section class="section chart-section fade-in">
           <div class="section-header">
-            <h2 class="section-title">Historico - {{ selectedSensor() }}</h2>
-            <button class="close-btn" (click)="selectedSensor.set('')">
+            <h2 class="section-title">Historico PPM - {{ selectedDevice() }}</h2>
+            <button class="close-btn" (click)="selectedDevice.set('')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
