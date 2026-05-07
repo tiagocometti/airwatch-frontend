@@ -3,7 +3,7 @@
       <header class="page-header">
         <div>
           <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Monitoramento em tempo real - atualiza a cada 30s</p>
+          <p class="page-subtitle">Acompanhe as medições do seu dispositivo em tempo real - atualiza a cada 30s</p>
         </div>
         <div class="header-actions">
           <div class="status-badge" [class.active]="!loading()">
@@ -41,87 +41,79 @@
           </div>
           <div>
             <div class="summary-value mono">{{ totalMeasurements() }}</div>
-            <div class="summary-label">Medicoes carregadas</div>
+            <div class="summary-label">Total de medicoes</div>
           </div>
         </div>
         <div class="summary-card">
-          <div class="summary-icon" [class]="avgPpmLevel()">
+          <div class="summary-icon warning">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2a10 10 0 0 0-7.07 17.07M12 2a10 10 0 0 1 7.07 17.07"/>
-              <circle cx="12" cy="12" r="3"/>
+              <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
             </svg>
           </div>
           <div>
-            <div class="summary-value mono">{{ avgPpm() }}</div>
-            <div class="summary-label">PPM medio</div>
+            <div class="summary-value mono" style="font-size:15px">{{ formatLastMeasurement(lastMeasurementTime()) }}</div>
+            <div class="summary-label">Ultima medicao</div>
           </div>
         </div>
       </div>
 
-      <!-- Sensor cards (3 por device) -->
+      <!-- Device cards -->
       <section class="section">
-        <h2 class="section-title">Leituras por Sensor</h2>
-        @if (loading() && deviceCards().length === 0) {
+        <h2 class="section-title">Dispositivos</h2>
+        @if (loading() && devices().length === 0) {
           <div class="cards-grid">
-            @for (i of [1,2,3,4,5,6]; track i) {
+            @for (i of [1,2,3]; track i) {
               <div class="sensor-card skeleton-card">
-                <div class="skeleton" style="height:20px;width:60%;margin-bottom:8px"></div>
-                <div class="skeleton" style="height:48px;width:40%;margin-bottom:16px"></div>
-                <div class="skeleton" style="height:14px;width:80%"></div>
+                <div class="skeleton" style="height:18px;width:55%;margin-bottom:10px"></div>
+                <div class="skeleton" style="height:13px;width:80%;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:13px;width:60%"></div>
               </div>
             }
           </div>
-        } @else if (deviceCards().length === 0) {
+        } @else if (devices().length === 0) {
           <div class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
               <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49"/>
             </svg>
             <p>Nenhum dispositivo cadastrado ainda.</p>
-            <a href="/devices" class="link-btn">Cadastrar dispositivo</a>
+            <button class="link-btn" (click)="goToRegisterDevice()">Cadastrar dispositivo</button>
           </div>
         } @else {
           <div class="cards-grid">
-            @for (card of deviceCards(); track card.device.externalId + card.sensorType) {
-              <div class="sensor-card fade-in" [class]="'card-' + card.level" (click)="selectDevice(card.device.externalId)">
+            @for (device of devices(); track device.externalId) {
+              <div class="sensor-card fade-in device-card"
+                   [class.card-selected]="selectedDeviceId() === device.externalId"
+                   (click)="selectDevice(device.externalId)">
                 <div class="card-top">
-                  <div class="sensor-id">{{ card.device.externalId }}</div>
-                  <div class="sensor-status" [class.online]="card.device.isActive">
+                  <div class="sensor-status" [class.online]="device.isOnline">
                     <span class="dot"></span>
-                    {{ card.device.isActive ? 'Online' : 'Offline' }}
+                    {{ device.isOnline ? 'Online' : 'Offline' }}
                   </div>
-                </div>
-                <div class="sensor-name">{{ card.label }}</div>
-                @if (card.latest) {
-                  @if (!card.latest.calibrated) {
-                    <div class="calib-badge">Nao calibrado</div>
+                  @if (!device.isOnline && device.lastSeen) {
+                    <div class="last-seen">{{ formatDate(device.lastSeen) }}</div>
                   }
-                  <div class="metrics-row">
-                    <div class="metric">
-                      <span class="metric-value mono" [class]="'text-' + card.level">{{ card.latest.ppm | number:'1.1-1' }}</span>
-                      <span class="metric-unit">ppm</span>
-                      <span class="metric-label">PPM</span>
-                    </div>
-                    <div class="metric-divider"></div>
-                    <div class="metric">
-                      <span class="metric-value mono">{{ card.latest.voltageV | number:'1.2-2' }}</span>
-                      <span class="metric-unit">V</span>
-                      <span class="metric-label">Tensao</span>
-                    </div>
-                    <div class="metric-divider"></div>
-                    <div class="metric">
-                      <span class="metric-value mono">{{ card.latest.adcRaw }}</span>
-                      <span class="metric-unit">ADC</span>
-                      <span class="metric-label">Raw</span>
-                    </div>
-                  </div>
-                  <div class="card-timestamp">
+                </div>
+                <div class="device-name">{{ device.name }}</div>
+                <div class="device-meta">
+                  <span class="device-meta-item">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+                      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
                     </svg>
-                    {{ formatTime(card.latest.timestamp) }}
-                  </div>
+                    {{ device.externalId }}
+                  </span>
+                  @if (device.location) {
+                    <span class="device-meta-item">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {{ device.location }}
+                    </span>
+                  }
+                </div>
+                @if (selectedDeviceId() === device.externalId) {
+                  <div class="card-hint">Clique novamente para fechar</div>
                 } @else {
-                  <div class="no-data">Sem medicoes recentes</div>
+                  <div class="card-hint">Clique para ver medicoes em tempo real</div>
                 }
               </div>
             }
@@ -129,20 +121,56 @@
         }
       </section>
 
-      <!-- Chart section -->
+      <!-- Real-time measurements section -->
       @if (selectedDevice()) {
-        <section class="section chart-section fade-in">
+        <section class="section realtime-section fade-in">
           <div class="section-header">
-            <h2 class="section-title">Historico PPM - {{ selectedDevice() }}</h2>
-            <button class="close-btn" (click)="selectedDevice.set('')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
+            <div class="realtime-title-group">
+              <h2 class="section-title">Medicoes em Tempo Real</h2>
+              <span class="realtime-device-name">{{ selectedDevice()!.name }}</span>
+            </div>
+            <div class="realtime-controls">
+              <div class="live-badge">
+                <span class="live-dot"></span>
+                Ao vivo · atualiza a cada 5s
+              </div>
+              <button class="close-btn" (click)="closeRealtime()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="chart-container">
-            <canvas #chartCanvas></canvas>
-          </div>
+
+          @if (isCalibrating()) {
+            <div class="waiting-state">
+              <div class="pulse-ring"></div>
+              <p>Dispositivo calibrando...</p>
+            </div>
+          } @else if (realtimeMeasurements().length === 0) {
+            <div class="waiting-state">
+              <div class="pulse-ring"></div>
+              <p>Aguardando novas medicoes desde {{ formatDate(clickTime()!.toISOString()) }}...</p>
+            </div>
+          } @else {
+            <!-- Cards com última leitura por sensor -->
+            <div class="realtime-summary">
+              @for (entry of [['mq3','MQ-3'],['mq5','MQ-5'],['mq135','MQ-135']]; track entry[0]) {
+                @if (realtimeBySensor()[entry[0]]) {
+                  <div class="realtime-sensor-card">
+                    <div class="rs-label">{{ entry[1] }}</div>
+                    <div class="rs-ppm mono">{{ realtimeBySensor()[entry[0]].ppm | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
+                    <div class="rs-voltage mono">{{ realtimeBySensor()[entry[0]].voltageV | number:'1.2-2' }} V</div>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Gráfico de PPM em tempo real -->
+            <div class="chart-container">
+              <canvas #realtimeChart></canvas>
+            </div>
+          }
         </section>
       }
     </div>

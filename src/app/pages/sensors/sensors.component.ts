@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { DeviceService } from '../../core/services/device.service';
 import { Device } from '../../core/models/device.model';
 
@@ -19,7 +20,7 @@ export class SensorsComponent implements OnInit {
   success = signal(false);
   form: FormGroup;
 
-  constructor(private deviceSvc: DeviceService, private fb: FormBuilder) {
+  constructor(private deviceSvc: DeviceService, private fb: FormBuilder, private route: ActivatedRoute) {
     this.form = this.fb.group({
       externalId: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
       name: ['', Validators.required],
@@ -27,7 +28,12 @@ export class SensorsComponent implements OnInit {
     });
   }
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    if (this.route.snapshot.queryParamMap.get('openModal') === 'true') {
+      this.showModal.set(true);
+    }
+  }
 
   load() {
     this.loading.set(true);

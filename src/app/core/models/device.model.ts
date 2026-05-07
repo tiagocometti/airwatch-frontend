@@ -4,6 +4,8 @@ export interface Device {
   name: string;
   location: string;
   isActive: boolean;
+  isOnline: boolean;
+  lastSeen: string | null;
   registeredAt: string;
 }
 
