@@ -3,7 +3,7 @@
       <header class="page-header">
         <div>
           <h1 class="page-title">Dashboard</h1>
-          <p class="page-subtitle">Acompanhe as medições do seu dispositivo em tempo real - atualiza a cada 30s</p>
+          <p class="page-subtitle">Acompanhe as medições do seu dispositivo em tempo real</p>
         </div>
         <div class="header-actions">
           <div class="status-badge" [class.active]="!loading()">
@@ -132,7 +132,7 @@
             <div class="realtime-controls">
               <div class="live-badge">
                 <span class="live-dot"></span>
-                Ao vivo · atualiza a cada 5s
+                Ao vivo via SignalR
               </div>
               <button class="close-btn" (click)="closeRealtime()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -142,29 +142,37 @@
             </div>
           </div>
 
-          @if (isCalibrating()) {
+          @if (realtimeMeasurements().length === 0) {
             <div class="waiting-state">
               <div class="pulse-ring"></div>
-              <p>Dispositivo calibrando...</p>
-            </div>
-          } @else if (realtimeMeasurements().length === 0) {
-            <div class="waiting-state">
-              <div class="pulse-ring"></div>
-              <p>Aguardando novas medicoes desde {{ formatDate(clickTime()!.toISOString()) }}...</p>
+              <p>Aguardando novas medicoes...</p>
             </div>
           } @else {
-            <!-- Cards com última leitura por sensor -->
-            <div class="realtime-summary">
-              @for (entry of [['mq3','MQ-3'],['mq5','MQ-5'],['mq135','MQ-135']]; track entry[0]) {
-                @if (realtimeBySensor()[entry[0]]) {
-                  <div class="realtime-sensor-card">
-                    <div class="rs-label">{{ entry[1] }}</div>
-                    <div class="rs-ppm mono">{{ realtimeBySensor()[entry[0]].ppm | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
-                    <div class="rs-voltage mono">{{ realtimeBySensor()[entry[0]].voltageV | number:'1.2-2' }} V</div>
-                  </div>
-                }
-              }
-            </div>
+            <!-- Cards com última leitura -->
+            @if (latestReading()) {
+              <div class="realtime-summary">
+                <div class="realtime-sensor-card">
+                  <div class="rs-label">Álcool (MQ-3)</div>
+                  <div class="rs-ppm mono">{{ latestReading()!.ppmAlcohol | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
+                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq3Adc }}</div>
+                </div>
+                <div class="realtime-sensor-card">
+                  <div class="rs-label">GLP (MQ-5)</div>
+                  <div class="rs-ppm mono">{{ latestReading()!.ppmLpg | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
+                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq5Adc }}</div>
+                </div>
+                <div class="realtime-sensor-card">
+                  <div class="rs-label">CO₂ (MQ-135)</div>
+                  <div class="rs-ppm mono">{{ latestReading()!.ppmCo2 | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
+                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq135Adc }}</div>
+                </div>
+                <div class="realtime-sensor-card">
+                  <div class="rs-label">NH₃ (MQ-135)</div>
+                  <div class="rs-ppm mono">{{ latestReading()!.ppmNh3 | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
+                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq135Adc }}</div>
+                </div>
+              </div>
+            }
 
             <!-- Gráfico de PPM em tempo real -->
             <div class="chart-container">

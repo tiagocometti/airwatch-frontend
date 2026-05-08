@@ -20,21 +20,20 @@ Chart.register(...registerables);
 export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('realtimeChart') realtimeChartCanvas?: ElementRef<HTMLCanvasElement>;
 
-  loading = signal(true);
-  devices = signal<Device[]>([]);
+  loading      = signal(true);
+  devices      = signal<Device[]>([]);
   measurements = signal<Measurement[]>([]);
 
-  selectedDeviceId = signal('');
-  clickTime = signal<Date | null>(null);
+  selectedDeviceId     = signal('');
   realtimeMeasurements = signal<Measurement[]>([]);
-  realtimeLoading = signal(false);
+  realtimeLoading      = signal(false);
 
   private refreshInterval?: ReturnType<typeof setInterval>;
-  private realtimeInterval?: ReturnType<typeof setInterval>;
   private realtimeChart?: Chart;
   private statusSub?: Subscription;
+  private newMeasurementSub?: Subscription;
 
-  activeDevices = computed(() => this.devices().filter(d => d.isOnline).length);
+  activeDevices    = computed(() => this.devices().filter(d => d.isOnline).length);
   totalMeasurements = computed(() => this.measurements().length);
 
   lastMeasurementTime = computed(() => {
@@ -47,24 +46,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.devices().find(d => d.externalId === this.selectedDeviceId()) ?? null
   );
 
-  isCalibrating = computed(() => {
+  latestReading = computed(() => {
     const rt = this.realtimeMeasurements();
-    if (rt.length === 0) return false;
-    const latest = rt.reduce((a, b) =>
-      new Date(a.timestamp) > new Date(b.timestamp) ? a : b
-    );
-    return !latest.calibrated;
-  });
-
-  realtimeBySensor = computed(() => {
-    const result: Record<string, Measurement> = {};
-    for (const m of this.realtimeMeasurements()) {
-      const existing = result[m.sensorType];
-      if (!existing || new Date(m.timestamp) > new Date(existing.timestamp)) {
-        result[m.sensorType] = m;
-      }
-    }
-    return result;
+    if (!rt.length) return null;
+    return rt.reduce((a, b) => new Date(a.timestamp) > new Date(b.timestamp) ? a : b);
   });
 
   constructor(
@@ -88,14 +73,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
       );
     });
 
+    this.newMeasurementSub = this.deviceStatusSvc.newMeasurement$.subscribe(m => {
+      if (m.deviceId === this.selectedDeviceId()) {
+        this.realtimeMeasurements.update(list => [...list, m]);
+      }
+    });
+
     this.loadData();
     this.refreshInterval = setInterval(() => this.loadData(), 30000);
   }
 
   ngOnDestroy() {
     this.statusSub?.unsubscribe();
+    this.newMeasurementSub?.unsubscribe();
     if (this.refreshInterval) clearInterval(this.refreshInterval);
-    if (this.realtimeInterval) clearInterval(this.realtimeInterval);
     this.realtimeChart?.destroy();
   }
 
@@ -127,49 +118,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     this.selectedDeviceId.set(externalId);
-    this.clickTime.set(new Date());
     this.realtimeMeasurements.set([]);
     this.realtimeChart?.destroy();
     this.realtimeChart = undefined;
 
-    if (this.realtimeInterval) clearInterval(this.realtimeInterval);
-    this.pollRealtime(externalId);
-    this.realtimeInterval = setInterval(() => this.pollRealtime(externalId), 5000);
-  }
-
-  closeRealtime() {
-    this.selectedDeviceId.set('');
-    this.clickTime.set(null);
-    this.realtimeMeasurements.set([]);
-    this.realtimeChart?.destroy();
-    this.realtimeChart = undefined;
-    if (this.realtimeInterval) clearInterval(this.realtimeInterval);
-  }
-
-  private pollRealtime(deviceId: string) {
-    const startTime = this.clickTime();
-    if (!startTime) return;
-
+    // Carrega histórico recente para popular o gráfico imediatamente
     this.realtimeLoading.set(true);
-    this.measurementSvc.getByDevice(deviceId, undefined, 1, 200).subscribe({
+    this.measurementSvc.getByDevice(externalId, 1, 30).subscribe({
       next: result => {
-        const filtered = result.items.filter(m => new Date(m.timestamp) >= startTime);
-        this.realtimeMeasurements.set(filtered);
+        this.realtimeMeasurements.set([...result.items].reverse());
         this.realtimeLoading.set(false);
       },
       error: () => this.realtimeLoading.set(false)
     });
   }
 
+  closeRealtime() {
+    this.selectedDeviceId.set('');
+    this.realtimeMeasurements.set([]);
+    this.realtimeChart?.destroy();
+    this.realtimeChart = undefined;
+  }
+
   private renderRealtimeChart() {
     if (!this.realtimeChartCanvas) return;
     const items = this.realtimeMeasurements();
-    if (items.length === 0) { this.realtimeChart?.destroy(); this.realtimeChart = undefined; return; }
+    if (!items.length) { this.realtimeChart?.destroy(); this.realtimeChart = undefined; return; }
 
-    const colors: Record<string, string> = { mq3: '#00d4ff', mq5: '#ff9800', mq135: '#00e676' };
-    const timestamps = [...new Set(items.map(m => m.timestamp))].sort();
-    const labels = timestamps.map(t =>
-      new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const labels = items.map(m =>
+      new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     );
 
     this.realtimeChart?.destroy();
@@ -178,20 +155,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       type: 'line',
       data: {
         labels,
-        datasets: ['mq3', 'mq5', 'mq135'].map(st => {
-          const pts = items
-            .filter(m => m.sensorType === st)
-            .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-          return {
-            label: st.replace('mq', 'MQ-') + ' (ppm)',
-            data: pts.map(m => m.ppm),
-            borderColor: colors[st],
-            backgroundColor: 'transparent',
-            tension: 0.4,
-            fill: false,
-            pointRadius: 3
-          };
-        })
+        datasets: [
+          { label: 'Álcool (ppm)', data: items.map(m => m.ppmAlcohol), borderColor: '#00d4ff', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 3 },
+          { label: 'GLP (ppm)',    data: items.map(m => m.ppmLpg),     borderColor: '#ff9800', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 3 },
+          { label: 'CO₂ (ppm)',    data: items.map(m => m.ppmCo2),     borderColor: '#00e676', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 3 },
+          { label: 'NH₃ (ppm)',    data: items.map(m => m.ppmNh3),     borderColor: '#ff4081', backgroundColor: 'transparent', tension: 0.4, fill: false, pointRadius: 3 }
+        ]
       },
       options: {
         responsive: true,
@@ -222,9 +191,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
       day: '2-digit', month: '2-digit',
       hour: '2-digit', minute: '2-digit'
     });
-  }
-
-  sensorLabel(type: string): string {
-    return type.replace('mq', 'MQ-').toUpperCase();
   }
 }

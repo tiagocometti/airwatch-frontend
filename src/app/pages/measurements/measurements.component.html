@@ -2,8 +2,8 @@
     <div class="measurements-page">
       <header class="page-header">
         <div>
-          <h1 class="page-title">Medicoes</h1>
-          <p class="page-subtitle">Historico completo de leituras dos sensores MQ</p>
+          <h1 class="page-title">Medições</h1>
+          <p class="page-subtitle">Histórico completo de leituras dos sensores MQ</p>
         </div>
       </header>
 
@@ -20,20 +20,11 @@
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Sensor</label>
-            <select formControlName="sensorType" class="filter-select">
-              <option value="">Todos os sensores</option>
-              @for (st of sensorTypes; track st) {
-                <option [value]="st">{{ st.replace('mq', 'MQ-') }}</option>
-              }
-            </select>
-          </div>
-          <div class="filter-group">
             <label class="filter-label">De</label>
             <input type="datetime-local" formControlName="from" class="filter-input">
           </div>
           <div class="filter-group">
-            <label class="filter-label">Ate</label>
+            <label class="filter-label">Até</label>
             <input type="datetime-local" formControlName="to" class="filter-input">
           </div>
           <button type="submit" class="apply-btn">
@@ -48,11 +39,12 @@
       <!-- Chart -->
       <div class="chart-card fade-in">
         <div class="chart-header">
-          <h3 class="chart-title">PPM por tipo de sensor</h3>
+          <h3 class="chart-title">PPM por gás ao longo do tempo</h3>
           <div class="chart-legend">
-            <span class="leg-item accent">● MQ-3</span>
-            <span class="leg-item warning">● MQ-5</span>
-            <span class="leg-item success">● MQ-135</span>
+            <span class="leg-item accent">● Álcool</span>
+            <span class="leg-item warning">● GLP</span>
+            <span class="leg-item success">● CO₂</span>
+            <span class="leg-item" style="color:#ff4081">● NH₃</span>
           </div>
         </div>
         <div class="chart-container">
@@ -79,25 +71,25 @@
           </div>
         } @else if (!result() || result()!.items.length === 0) {
           <div class="empty-state">
-            <p>Nenhuma medicao encontrada para os filtros selecionados.</p>
+            <p>Nenhuma medição encontrada para os filtros selecionados.</p>
           </div>
         } @else {
           <div class="table-header">
             <span>Dispositivo</span>
-            <span>Sensor</span>
-            <span>PPM</span>
-            <span>Tensao (V)</span>
-            <span>Calibrado</span>
             <span>Data/Hora</span>
+            <span>Álcool (ppm)</span>
+            <span>GLP (ppm)</span>
+            <span>CO₂ (ppm)</span>
+            <span>NH₃ (ppm)</span>
           </div>
           @for (m of result()!.items; track m.id) {
             <div class="table-row">
-              <span class="mono accent-text">{{ m.deviceExternalId }}</span>
-              <span class="mono">{{ m.sensorType.replace('mq', 'MQ-') }}</span>
-              <span class="mono" [class]="ppmClass(m.ppm)">{{ m.ppm | number:'1.1-1' }}</span>
-              <span class="mono">{{ m.voltageV | number:'1.2-2' }}</span>
-              <span class="mono">{{ m.calibrated ? 'Sim' : 'Nao' }}</span>
+              <span class="mono accent-text">{{ m.deviceId }}</span>
               <span class="timestamp">{{ formatDateTime(m.timestamp) }}</span>
+              <span class="mono" [class]="ppmClass(m.ppmAlcohol)">{{ m.ppmAlcohol | number:'1.1-1' }}</span>
+              <span class="mono" [class]="ppmClass(m.ppmLpg)">{{ m.ppmLpg | number:'1.1-1' }}</span>
+              <span class="mono" [class]="ppmClass(m.ppmCo2)">{{ m.ppmCo2 | number:'1.1-1' }}</span>
+              <span class="mono" [class]="ppmClass(m.ppmNh3)">{{ m.ppmNh3 | number:'1.1-1' }}</span>
             </div>
           }
         }

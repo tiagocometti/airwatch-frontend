@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from './auth.service';
+import { Measurement } from '../models/measurement.model';
 
 export interface DeviceStatusEvent {
   deviceId: string;
@@ -14,7 +15,8 @@ export class DeviceStatusService {
   private readonly hubUrl = 'http://localhost:5119/hubs/device-status';
   private connection: signalR.HubConnection;
 
-  readonly statusChanges$ = new Subject<DeviceStatusEvent>();
+  readonly statusChanges$    = new Subject<DeviceStatusEvent>();
+  readonly newMeasurement$   = new Subject<Measurement>();
 
   constructor(private authSvc: AuthService) {
     this.connection = new signalR.HubConnectionBuilder()
@@ -26,6 +28,10 @@ export class DeviceStatusService {
 
     this.connection.on('DeviceStatusChanged', (event: DeviceStatusEvent) => {
       this.statusChanges$.next(event);
+    });
+
+    this.connection.on('NewMeasurement', (measurement: Measurement) => {
+      this.newMeasurement$.next(measurement);
     });
   }
 

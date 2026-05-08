@@ -46,6 +46,9 @@
       margin: 0 auto 16px;
       animation: glow-pulse 3s ease-in-out infinite;
     }
+    .logo-img {
+      filter: brightness(0) saturate(100%) invert(68%) sepia(100%) saturate(500%) hue-rotate(157deg) brightness(105%);
+    }
     .card-title {
       font-size: 26px;
       font-weight: 800;

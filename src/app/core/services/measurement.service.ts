@@ -14,9 +14,8 @@ export class MeasurementService {
     return this.http.get<PagedResult<Measurement>>(`${API}/measurements/latest`, { params });
   }
 
-  getByDevice(deviceId: string, sensorType?: string, page = 1, pageSize = 50) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (sensorType) params = params.set('sensorType', sensorType);
+  getByDevice(deviceId: string, page = 1, pageSize = 50) {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<Measurement>>(`${API}/measurements/device/${deviceId}`, { params });
   }
 

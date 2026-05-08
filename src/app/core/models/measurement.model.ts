@@ -1,12 +1,12 @@
 export interface Measurement {
   id: string;
-  deviceExternalId: string;
-  sensorType: 'mq3' | 'mq5' | 'mq135';
-  calibrated: boolean;
-  adcRaw: number;
-  voltageV: number;
-  rsOhm: number;
-  rsR0Ratio: number;
-  ppm: number;
+  deviceId: string;
   timestamp: string;
+  mq3Adc: number;
+  mq5Adc: number;
+  mq135Adc: number;
+  ppmAlcohol: number;
+  ppmLpg: number;
+  ppmCo2: number;
+  ppmNh3: number;
 }
