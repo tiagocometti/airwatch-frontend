@@ -19,4 +19,8 @@ export class DeviceService {
   register(req: CreateDevice) {
     return this.http.post<Device>(`${API}/devices`, req);
   }
+
+  update(id: string, req: { name: string; location: string }) {
+    return this.http.patch<Device>(`${API}/devices/${id}`, req);
+  }
 }

@@ -37,7 +37,9 @@
             <span>ID Externo</span>
             <span>Nome</span>
             <span>Localizacao</span>
+            <span>Online</span>
             <span>Status</span>
+            <span></span>
           </div>
           @for (device of devices(); track device.externalId) {
             <div class="table-row">
@@ -49,16 +51,26 @@
                 </svg>
                 {{ device.location }}
               </span>
+              <span class="online-cell">
+                <span class="online-dot" [class.online]="device.isOnline" [title]="device.isOnline ? 'Online' : 'Offline'"></span>
+                <span class="online-label">{{ device.isOnline ? 'Online' : 'Offline' }}</span>
+              </span>
               <span class="status-pill" [class.active]="device.isActive">
                 <span class="dot"></span>
                 {{ device.isActive ? 'Ativo' : 'Inativo' }}
               </span>
+              <button class="gear-btn" (click)="openSettings(device)" title="Configurações">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </button>
             </div>
           }
         </div>
       }
 
-      <!-- Modal -->
+      <!-- Modal: Cadastrar Dispositivo -->
       @if (showModal()) {
         <div class="modal-overlay" (click)="closeModal()">
           <div class="modal-card fade-in" (click)="$event.stopPropagation()">
@@ -98,6 +110,60 @@
                 <button type="submit" class="submit-btn" [disabled]="form.invalid || saving()">
                   {{ saving() ? 'Salvando...' : 'Cadastrar' }}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- Modal: Configurações do Dispositivo -->
+      @if (showSettings() && selectedDevice()) {
+        <div class="modal-overlay" (click)="closeSettings()">
+          <div class="modal-card fade-in" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Configurar Dispositivo</h2>
+              <button class="close-btn" (click)="closeSettings()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="device-id-badge">
+              <span class="field-label">ID Externo</span>
+              <span class="mono accent-text">{{ selectedDevice()!.externalId }}</span>
+            </div>
+
+            <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()" class="modal-form">
+              <div class="field-group">
+                <label class="field-label">Nome</label>
+                <input formControlName="name" class="field-input">
+              </div>
+              <div class="field-group">
+                <label class="field-label">Localizacao</label>
+                <input formControlName="location" class="field-input">
+              </div>
+
+              @if (error()) {
+                <div class="error-msg fade-in">{{ error() }}</div>
+              }
+              @if (success()) {
+                <div class="success-msg fade-in">Salvo com sucesso!</div>
+              }
+
+              <div class="modal-actions">
+                <button type="button" class="calibrations-btn" (click)="goToCalibrations(selectedDevice()!)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+                  </svg>
+                  Gerenciar calibrações
+                </button>
+                <div style="display:flex;gap:10px">
+                  <button type="button" class="cancel-btn" (click)="closeSettings()">Cancelar</button>
+                  <button type="submit" class="submit-btn" [disabled]="settingsForm.invalid || saving()">
+                    {{ saving() ? 'Salvando...' : 'Salvar' }}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

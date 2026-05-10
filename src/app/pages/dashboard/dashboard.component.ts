@@ -9,6 +9,9 @@ import { Device } from '../../core/models/device.model';
 import { Measurement } from '../../core/models/measurement.model';
 import { Chart, registerables } from 'chart.js';
 
+// deviceId (ExternalId) → device name for calibration banners
+type CalibrationBannerMap = Record<string, string>;
+
 Chart.register(...registerables);
 
 @Component({
@@ -28,10 +31,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   realtimeMeasurements = signal<Measurement[]>([]);
   realtimeLoading      = signal(false);
 
+  calibrationBanners = signal<CalibrationBannerMap>({});
+
   private refreshInterval?: ReturnType<typeof setInterval>;
   private realtimeChart?: Chart;
   private statusSub?: Subscription;
   private newMeasurementSub?: Subscription;
+  private calStartedSub?: Subscription;
+  private calEndedSub?: Subscription;
 
   activeDevices    = computed(() => this.devices().filter(d => d.isOnline).length);
   totalMeasurements = computed(() => this.measurements().length);
@@ -79,6 +86,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.calStartedSub = this.deviceStatusSvc.calibrationStarted$.subscribe(ev => {
+      const device = this.devices().find(d => d.externalId === ev.deviceId);
+      const name = device?.name ?? ev.deviceId;
+      this.calibrationBanners.update(m => ({ ...m, [ev.deviceId]: name }));
+    });
+
+    const removeBanner = (deviceId: string) => {
+      this.calibrationBanners.update(m => {
+        const copy = { ...m };
+        delete copy[deviceId];
+        return copy;
+      });
+    };
+
+    this.calEndedSub = new Subscription();
+    this.calEndedSub.add(this.deviceStatusSvc.calibrationCompleted$.subscribe(ev => removeBanner(ev.deviceId)));
+    this.calEndedSub.add(this.deviceStatusSvc.calibrationFailed$.subscribe(ev => removeBanner(ev.deviceId)));
+    this.calEndedSub.add(this.deviceStatusSvc.calibrationCancelled$.subscribe(ev => removeBanner(ev.deviceId)));
+
     this.loadData();
     this.refreshInterval = setInterval(() => this.loadData(), 30000);
   }
@@ -86,6 +112,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.statusSub?.unsubscribe();
     this.newMeasurementSub?.unsubscribe();
+    this.calStartedSub?.unsubscribe();
+    this.calEndedSub?.unsubscribe();
     if (this.refreshInterval) clearInterval(this.refreshInterval);
     this.realtimeChart?.destroy();
   }

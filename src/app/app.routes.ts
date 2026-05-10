@@ -13,6 +13,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       { path: 'sensors', loadComponent: () => import('./pages/sensors/sensors.component').then(m => m.SensorsComponent) },
       { path: 'measurements', loadComponent: () => import('./pages/measurements/measurements.component').then(m => m.MeasurementsComponent) },
+      { path: 'calibrations/:deviceId', loadComponent: () => import('./pages/calibrations/calibrations.component').then(m => m.CalibrationsComponent) },
     ]
   },
   { path: '**', redirectTo: '' }

@@ -1,0 +1,189 @@
+<div class="cal-page">
+
+  <!-- Header -->
+  <header class="page-header">
+    <div>
+      <h1 class="page-title">Calibrações</h1>
+      <p class="page-subtitle mono accent-text">{{ deviceId() }}</p>
+    </div>
+    <button class="add-btn" [disabled]="hasInProgress()" (click)="showStartModal.set(true)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nova calibração
+    </button>
+  </header>
+
+  @if (error()) {
+    <div class="error-banner fade-in">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Seção 1: Estado Atual -->
+  <section class="section-card fade-in">
+    <h2 class="section-title">Calibração ativa</h2>
+    @if (loading()) {
+      <div class="skeleton" style="height:60px;border-radius:var(--radius-md)"></div>
+    } @else if (activeCalibration()) {
+      <div class="active-cal-info">
+        <div class="info-row">
+          <span class="info-label">Ambiente</span>
+          <span class="info-value">{{ activeCalibration()!.location }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Concluída em</span>
+          <span class="info-value">{{ formatDate(activeCalibration()!.completedAt!) }}</span>
+        </div>
+        <div class="r0-grid">
+          <div class="r0-item">
+            <span class="r0-label">MQ-3 (Álcool)</span>
+            <span class="r0-value accent-text">{{ formatR0(activeCalibration()!.r0Mq3) }}</span>
+          </div>
+          <div class="r0-item">
+            <span class="r0-label">MQ-5 (GLP)</span>
+            <span class="r0-value accent-text">{{ formatR0(activeCalibration()!.r0Mq5) }}</span>
+          </div>
+          <div class="r0-item">
+            <span class="r0-label">MQ-135 (CO₂/NH₃)</span>
+            <span class="r0-value accent-text">{{ formatR0(activeCalibration()!.r0Mq135) }}</span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="no-calibration-warning">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Nenhuma calibração ativa. As medições de PPM estão pausadas para este dispositivo.
+      </div>
+    }
+  </section>
+
+  <!-- Seção 2: Progresso (aparece quando há InProgress) -->
+  @if (inProgressCal()) {
+    <section class="section-card progress-section fade-in">
+      <div class="progress-header">
+        <div>
+          <h2 class="section-title">Calibrando agora</h2>
+          <p class="progress-location">{{ inProgressCal()!.location }}</p>
+        </div>
+        <button class="cancel-cal-btn" (click)="showCancelConfirm.set(true)">Cancelar</button>
+      </div>
+
+      <div class="countdown-row">
+        <div class="countdown-timer">{{ tempoRestante() || '--:--' }}</div>
+        <span class="progress-samples">{{ progress()?.sampleCount ?? 0 }} amostras coletadas</span>
+      </div>
+
+      @if (progress()) {
+        <div class="r0-grid">
+          <div class="r0-item">
+            <span class="r0-label">MQ-3 R0 parcial</span>
+            <span class="r0-value">{{ formatR0(progress()!.currentR0Mq3) }}</span>
+          </div>
+          <div class="r0-item">
+            <span class="r0-label">MQ-5 R0 parcial</span>
+            <span class="r0-value">{{ formatR0(progress()!.currentR0Mq5) }}</span>
+          </div>
+          <div class="r0-item">
+            <span class="r0-label">MQ-135 R0 parcial</span>
+            <span class="r0-value">{{ formatR0(progress()!.currentR0Mq135) }}</span>
+          </div>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- Seção 3: Histórico -->
+  <section class="section-card fade-in">
+    <h2 class="section-title">Histórico</h2>
+
+    @if (loading()) {
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-md);margin-bottom:10px"></div>
+      }
+    } @else if (calibrations().length === 0) {
+      <p class="empty-hint">Nenhuma calibração registrada ainda.</p>
+    } @else {
+      <div class="history-list">
+        @for (cal of calibrations(); track cal.id) {
+          <div class="history-item">
+            <div class="history-top">
+              <div class="history-meta">
+                <span class="history-location">{{ cal.location }}</span>
+                <span class="history-date">{{ formatDate(cal.startedAt) }}</span>
+              </div>
+              <div class="history-right">
+                <span class="badge" [class]="statusClass(cal.status)">{{ statusLabel(cal.status) }}</span>
+                @if (cal.isActive) {
+                  <span class="in-use-badge">Em uso</span>
+                } @else if (cal.status === 'Completed') {
+                  <button class="use-btn" (click)="activateCalibration(cal.id)">Usar esta</button>
+                }
+              </div>
+            </div>
+
+            @if (cal.status === 'Completed' || cal.status === 'Failed') {
+              <div class="history-r0-row">
+                <span class="r0-mini"><span class="r0-mini-label">MQ-3</span> {{ formatR0(cal.r0Mq3) }}</span>
+                <span class="r0-mini"><span class="r0-mini-label">MQ-5</span> {{ formatR0(cal.r0Mq5) }}</span>
+                <span class="r0-mini"><span class="r0-mini-label">MQ-135</span> {{ formatR0(cal.r0Mq135) }}</span>
+                <span class="r0-mini"><span class="r0-mini-label">Amostras</span> {{ cal.sampleCount }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+</div>
+
+<!-- Modal: Nova calibração -->
+@if (showStartModal()) {
+  <div class="modal-overlay" (click)="showStartModal.set(false)">
+    <div class="modal-card fade-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Iniciar calibração</h2>
+        <button class="close-btn" (click)="showStartModal.set(false)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p class="modal-hint">O dispositivo será colocado em modo de calibração por 5 minutos. Deixe o sensor em ar limpo durante todo o processo.</p>
+      <form [formGroup]="startForm" (ngSubmit)="startCalibration()" class="modal-form">
+        <div class="field-group">
+          <label class="field-label">Nome do ambiente</label>
+          <input formControlName="location" class="field-input" placeholder="ex: Laboratório 1" autofocus>
+          <span class="field-hint">Identifica onde a calibração foi feita.</span>
+        </div>
+        @if (error()) {
+          <div class="error-msg">{{ error() }}</div>
+        }
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="showStartModal.set(false)">Cancelar</button>
+          <button type="submit" class="submit-btn" [disabled]="startForm.invalid || saving()">
+            {{ saving() ? 'Iniciando...' : 'Iniciar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal: Confirmar cancelamento -->
+@if (showCancelConfirm()) {
+  <div class="modal-overlay" (click)="showCancelConfirm.set(false)">
+    <div class="modal-card fade-in confirm-card" (click)="$event.stopPropagation()">
+      <h2 class="modal-header" style="border-bottom:none;padding:0;font-size:18px">Cancelar calibração?</h2>
+      <p class="modal-hint" style="margin-top:12px">Os dados coletados até agora serão descartados. Esta ação não pode ser desfeita.</p>
+      <div class="modal-actions" style="margin-top:20px">
+        <button class="cancel-btn" (click)="showCancelConfirm.set(false)">Manter</button>
+        <button class="danger-btn" [disabled]="saving()" (click)="cancelCalibration()">
+          {{ saving() ? 'Cancelando...' : 'Sim, cancelar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
