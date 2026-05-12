@@ -133,12 +133,12 @@
         }
       </section>
 
-      <!-- Real-time measurements section -->
+      <!-- Gauge card (expandable) -->
       @if (selectedDevice()) {
         <section class="section realtime-section fade-in">
           <div class="section-header">
             <div class="realtime-title-group">
-              <h2 class="section-title">Medicoes em Tempo Real</h2>
+              <h2 class="section-title">Medições em Tempo Real</h2>
               <span class="realtime-device-name">{{ selectedDevice()!.name }}</span>
             </div>
             <div class="realtime-controls">
@@ -146,7 +146,7 @@
                 <span class="live-dot"></span>
                 Ao vivo via SignalR
               </div>
-              <button class="close-btn" (click)="closeRealtime()">
+              <button class="close-btn" (click)="closeGaugeCard()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
@@ -154,43 +154,50 @@
             </div>
           </div>
 
-          @if (realtimeMeasurements().length === 0) {
-            <div class="waiting-state">
-              <div class="pulse-ring"></div>
-              <p>Aguardando novas medicoes...</p>
+          <!-- Estado: Offline -->
+          @if (!selectedDevice()!.isOnline) {
+            <div class="gauge-waiting-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="var(--text-muted)">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>
+              </svg>
+              <p>Dispositivo offline. As medições serão retomadas quando o dispositivo estiver online.</p>
             </div>
-          } @else {
-            <!-- Cards com última leitura -->
-            @if (latestReading()) {
-              <div class="realtime-summary">
-                <div class="realtime-sensor-card">
-                  <div class="rs-label">Álcool (MQ-3)</div>
-                  <div class="rs-ppm mono">{{ latestReading()!.ppmAlcohol | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
-                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq3Adc }}</div>
-                </div>
-                <div class="realtime-sensor-card">
-                  <div class="rs-label">GLP (MQ-5)</div>
-                  <div class="rs-ppm mono">{{ latestReading()!.ppmLpg | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
-                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq5Adc }}</div>
-                </div>
-                <div class="realtime-sensor-card">
-                  <div class="rs-label">CO₂ (MQ-135)</div>
-                  <div class="rs-ppm mono">{{ latestReading()!.ppmCo2 | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
-                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq135Adc }}</div>
-                </div>
-                <div class="realtime-sensor-card">
-                  <div class="rs-label">NH₃ (MQ-135)</div>
-                  <div class="rs-ppm mono">{{ latestReading()!.ppmNh3 | number:'1.1-1' }} <span class="rs-unit">ppm</span></div>
-                  <div class="rs-adc mono">ADC: {{ latestReading()!.mq135Adc }}</div>
-                </div>
-              </div>
-            }
 
-            <!-- Gráfico de PPM em tempo real -->
-            <div class="chart-container">
-              <canvas #realtimeChart></canvas>
+          <!-- Estado: Em calibração -->
+          } @else if (isCalibrating(selectedDeviceId())) {
+            <div class="gauge-waiting-state">
+              <div class="pulse-ring"></div>
+              <p>Dispositivo em calibração...</p>
             </div>
+
+          <!-- Estado: Online — exibe gauges -->
+          } @else {
+            @if (realtimeLoading()) {
+              <div class="gauge-waiting-state">
+                <div class="pulse-ring"></div>
+                <p>Carregando última leitura...</p>
+              </div>
+            } @else {
+              <div class="gauge-panel-grid">
+                @if (thresholdCo2) {
+                  <app-gauge gasName="CO₂"    [value]="latestReading()?.ppmCo2    ?? 0" [threshold]="thresholdCo2"     unit="ppm" />
+                }
+                @if (thresholdNh3) {
+                  <app-gauge gasName="NH₃"    [value]="latestReading()?.ppmNh3    ?? 0" [threshold]="thresholdNh3"     unit="ppm" />
+                }
+                @if (thresholdLpg) {
+                  <app-gauge gasName="GLP"    [value]="latestReading()?.ppmLpg    ?? 0" [threshold]="thresholdLpg"     unit="ppm" />
+                }
+                @if (thresholdAlcohol) {
+                  <app-gauge gasName="Álcool" [value]="latestReading()?.ppmAlcohol ?? 0" [threshold]="thresholdAlcohol" unit="ppm" />
+                }
+              </div>
+              @if (!latestReading()) {
+                <p class="gauge-no-data">Aguardando nova medição via SignalR...</p>
+              }
+            }
           }
         </section>
       }
+
     </div>

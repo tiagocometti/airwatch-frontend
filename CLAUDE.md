@@ -2,9 +2,9 @@
 
 ## Stack
 - Angular 21
-- Chart.js para gráficos de leituras em tempo real
 - SignalR (@microsoft/signalr) para eventos em tempo real
 - lucide-angular instalado mas não usado diretamente — ícones de nav são SVG inline via DomSanitizer
+- Chart.js ainda no package.json mas não é mais usado no dashboard (gráficos substituídos por gauges SVG na view de detalhe)
 
 ## Estrutura
 ```
@@ -12,18 +12,21 @@ src/app/
 ├── core/
 │   ├── guards/       # authGuard protege o shell
 │   ├── interceptors/ # JWT anexado em todas as requisições autenticadas
-│   ├── models/       # Interfaces/tipos TypeScript (device, measurement, calibration)
-│   └── services/     # Serviços de API, SignalR, autenticação
+│   ├── models/       # Interfaces/tipos TypeScript (device, measurement, calibration, gas-threshold)
+│   └── services/     # Serviços de API, SignalR, autenticação, gas-threshold
 ├── assets/
 │   └── icons/
 │       └── airwatch-icon.svg   # ícone original; cópia servida em public/
 ├── layout/
 │   ├── shell/        # Wrapper com sidebar + router-outlet
 │   └── sidebar/      # Menu lateral retrátil
+├── shared/
+│   └── gauge/        # GaugeComponent standalone — arco SVG semicircular com 4 zonas coloridas
 └── pages/
     ├── login/
     ├── register/
-    ├── dashboard/      # Cards de resumo, gráfico tempo real, banner de calibração em andamento
+    ├── dashboard/      # Cards de resumo + cards de dispositivos; clicar navega para device-detail
+    ├── device-detail/  # Rota /dashboard/devices/:externalId — 4 gauges + subscrição SignalR
     ├── sensors/        # Lista de dispositivos com dot online/offline, gear icon e modal de config
     ├── calibrations/   # Rota /calibrations/:deviceId — 3 seções: calibração ativa, progresso, histórico
     └── measurements/   # Histórico com filtros por dispositivo e período
@@ -99,7 +102,19 @@ interface Measurement {
 
 ## Dashboard (`/dashboard`)
 - Banner laranja exibido para cada device com calibração `InProgress`
-- Telemetria em tempo real e gráficos de PPM por device selecionado
+- Clicar em um card de dispositivo navega para `/dashboard/devices/:externalId`
+- SignalR mantido para status online/offline e banners de calibração
+
+## Device Detail (`/dashboard/devices/:externalId`)
+- Carrega dispositivo via `GET /api/devices/:externalId` e última medição via `getByDevice(externalId, 1, 1)`
+- 4 gauges SVG (CO₂, NH₃, GLP, Álcool) alimentados pelos thresholds do `GasThresholdService`
+- Subscreve ao SignalR `newMeasurement$` filtrando pelo `externalId` da rota
+- `GasThresholdService` carregado via `APP_INITIALIZER` em `app.config.ts`
+
+## GaugeComponent (`shared/gauge`)
+- Arco SVG semicircular (180°) dividido em 4 zonas: verde (Seguro), amarelo-verde (Bom), laranja (Alerta), vermelho (Perigo)
+- Agulha animada por CSS `transition: transform 0.6s ease-out` com `transform-origin` no centro do arco
+- Max visual do gauge = `alertMax * 1.5`; proporções das zonas determinadas pelos thresholds recebidos via `@Input`
 
 ## Sidebar
 - Menu lateral retrátil (68px recolhido / 240px expandido) com transição CSS

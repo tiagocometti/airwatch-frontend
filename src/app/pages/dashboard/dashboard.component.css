@@ -204,7 +204,8 @@
       padding-top: 8px; margin-top: 4px;
     }
 
-    /* Real-time section */
+
+    /* Realtime / gauge card */
     .realtime-section {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -212,10 +213,7 @@
       padding: 24px;
     }
     .realtime-title-group { display: flex; align-items: baseline; gap: 12px; }
-    .realtime-device-name {
-      font-size: 13px; color: var(--accent);
-      font-family: var(--font-data); font-weight: 500;
-    }
+    .realtime-device-name { font-size: 13px; color: var(--accent); font-family: var(--font-data); font-weight: 500; }
     .realtime-controls { display: flex; align-items: center; gap: 12px; }
     .live-badge {
       display: flex; align-items: center; gap: 7px;
@@ -230,31 +228,35 @@
       background: var(--success);
       animation: pulse-dot 1.5s ease-in-out infinite;
     }
-
-    /* Real-time sensor summary cards */
-    .realtime-summary {
-      display: flex; gap: 12px; flex-wrap: wrap;
-      margin-bottom: 24px;
+    .close-btn {
+      background: none; border: none; color: var(--text-secondary);
+      cursor: pointer; padding: 6px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; transition: all var(--transition);
     }
-    .realtime-sensor-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
-      min-width: 140px;
-    }
-    .rs-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .rs-ppm { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-    .rs-unit { font-size: 12px; font-weight: 400; color: var(--text-secondary); }
-    .rs-voltage { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
-    .rs-uncalib { font-size: 10px; color: var(--warning); margin-top: 6px; }
+    .close-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
 
-    /* Waiting state */
-    .waiting-state {
+    /* Gauge grid */
+    .gauge-panel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px 32px;
+      justify-items: center;
+      padding: 16px 0 8px;
+    }
+    .gauge-no-data {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Waiting / offline / calibrating states inside gauge card */
+    .gauge-waiting-state {
       display: flex; flex-direction: column; align-items: center;
       padding: 48px 20px; gap: 16px;
-      color: var(--text-secondary); font-size: 13px;
+      color: var(--text-secondary); font-size: 13px; text-align: center;
     }
+    .gauge-waiting-state p { max-width: 360px; line-height: 1.5; }
     .pulse-ring {
       width: 40px; height: 40px; border-radius: 50%;
       border: 2px solid var(--accent);
@@ -264,32 +266,6 @@
       0%   { transform: scale(0.8); opacity: 1; }
       100% { transform: scale(1.6); opacity: 0; }
     }
-
-    /* Feed table */
-    .realtime-feed { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-    .feed-header, .feed-row {
-      display: grid;
-      grid-template-columns: 90px 80px 80px 100px 70px 80px;
-      gap: 0;
-    }
-    .feed-header {
-      background: rgba(255,255,255,0.04);
-      padding: 10px 16px;
-      font-size: 11px; font-weight: 600;
-      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .feed-header span, .feed-row span { padding: 0 4px; }
-    .feed-row {
-      padding: 10px 16px;
-      font-size: 12px; color: var(--text-secondary);
-      border-top: 1px solid var(--border);
-      transition: background var(--transition);
-    }
-    .feed-row:hover { background: rgba(255,255,255,0.03); }
-    .accent-text { color: var(--accent); }
-
-    .text-success { color: var(--success) !important; }
-    .text-warn { color: var(--warning) !important; }
 
     @keyframes pulse-dot {
       0%, 100% { opacity: 1; }
